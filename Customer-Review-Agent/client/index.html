@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Review Analysis Agent</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="background-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar glass-panel">
+            <div class="brand">
+                <i class="fa-solid fa-robot"></i>
+                <h2>CRA Agent</h2>
+            </div>
+            <ul class="nav-links">
+                <li class="active" data-tab="dashboard-tab">
+                    <i class="fa-solid fa-chart-pie"></i> <span>Dashboard</span>
+                </li>
+                <li data-tab="analyze-tab">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i> <span>Analyze Review</span>
+                </li>
+                <li data-tab="history-tab">
+                    <i class="fa-solid fa-clock-rotate-left"></i> <span>History</span>
+                </li>
+                <li id="logoutBtn" style="margin-top: auto; color: var(--danger);">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Logout</span>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-header glass-panel">
+                <h1>Customer Review Analysis</h1>
+                <p>AI-powered insights for your business</p>
+            </header>
+
+            <div class="tab-content" id="analyze-tab">
+                <div class="input-section glass-panel">
+                    <h3><i class="fa-solid fa-pen-to-square"></i> Input Reviews</h3>
+                    <p>Paste customer reviews below or upload a text file for analysis.</p>
+                    
+                    <div class="file-upload-wrapper">
+                        <label for="fileUpload" class="file-upload-label">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload .txt file
+                        </label>
+                        <input type="file" id="fileUpload" accept=".txt">
+                        <span id="fileName">No file chosen</span>
+                    </div>
+
+                    <textarea id="reviewInput" placeholder="Paste customer reviews here... e.g. 'I loved the product, but shipping was slow.'"></textarea>
+                    <div class="textarea-footer">
+                        <span id="charCount">0 characters</span>
+                        <div class="action-buttons">
+                            <button class="btn btn-secondary" id="clearBtn"><i class="fa-solid fa-eraser"></i> Clear</button>
+                            <button class="btn btn-primary" id="analyzeBtn"><i class="fa-solid fa-wand-magic-sparkles"></i> Analyze with AI</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="spinner"></div>
+                    <p>Analyzing reviews with Gemini AI...</p>
+                </div>
+
+                <!-- Analysis Results (Hidden by default) -->
+                <div class="results-section glass-panel hidden" id="resultsSection">
+                    <div class="results-header">
+                        <h2>Analysis Results</h2>
+                        <div class="rating-badge" id="resRating">
+                            <i class="fa-solid fa-star"></i> <span>4.5</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-box">
+                        <h4><i class="fa-solid fa-bolt"></i> AI Summary</h4>
+                        <p id="resSummary">Summary will appear here...</p>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card sentiment-metric">
+                            <h5>Overall Sentiment</h5>
+                            <h3 id="resSentiment" class="sentiment-text">Positive</h3>
+                        </div>
+                        <div class="metric-card split-metric">
+                            <div class="split-item positive">
+                                <h5>Positive</h5>
+                                <h3 id="resPosPercent">0%</h3>
+                            </div>
+                            <div class="split-item neutral">
+                                <h5>Neutral</h5>
+                                <h3 id="resNeuPercent">0%</h3>
+                            </div>
+                            <div class="split-item negative">
+                                <h5>Negative</h5>
+                                <h3 id="resNegPercent">0%</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lists-grid">
+                        <div class="list-card">
+                            <h4 class="text-success"><i class="fa-regular fa-circle-check"></i> Positive Highlights</h4>
+                            <ul id="resPosPoints"></ul>
+                        </div>
+                        <div class="list-card">
+                            <h4 class="text-danger"><i class="fa-regular fa-circle-xmark"></i> Top Complaints</h4>
+                            <ul id="resNegPoints"></ul>
+                        </div>
+                    </div>
+
+                    <div class="tags-section">
+                        <h4><i class="fa-solid fa-tags"></i> Keywords</h4>
+                        <div class="keyword-tags" id="resKeywords"></div>
+                    </div>
+
+                    <div class="recommendation-box">
+                        <h4><i class="fa-solid fa-lightbulb"></i> Business Recommendations</h4>
+                        <p id="resBusinessRec"></p>
+                        <h5>Suggested Actions:</h5>
+                        <ul id="resSuggestions"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content hidden" id="dashboard-tab">
+                <div class="dashboard-stats-grid">
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon"><i class="fa-solid fa-chart-simple"></i></div>
+                        <div class="stat-info">
+                            <h3 id="statTotal">0</h3>
+                            <p>Total Analyses</p>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon"><i class="fa-solid fa-star"></i></div>
+                        <div class="stat-info">
+                            <h3 id="statAvgRating">0.0</h3>
+                            <p>Average Rating</p>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon text-success"><i class="fa-regular fa-face-smile"></i></div>
+                        <div class="stat-info">
+                            <h3 id="statPositive">0</h3>
+                            <p>Positive Reviews</p>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon text-danger"><i class="fa-regular fa-face-frown"></i></div>
+                        <div class="stat-info">
+                            <h3 id="statNegative">0</h3>
+                            <p>Negative Reviews</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-container glass-panel">
+                        <h3>Sentiment Distribution</h3>
+                        <canvas id="sentimentPieChart"></canvas>
+                    </div>
+                    <div class="chart-container glass-panel">
+                        <h3>Overall Volume & Ratings</h3>
+                        <canvas id="volumeBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content hidden" id="history-tab">
+                <div class="history-controls glass-panel">
+                    <div class="search-box">
+                        <i class="fa-solid fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Search history by keyword or sentiment...">
+                    </div>
+                    <button class="btn btn-danger" id="deleteAllBtn"><i class="fa-solid fa-trash-can"></i> Delete All</button>
+                </div>
+
+                <div class="table-container glass-panel">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Sentiment</th>
+                                <th>Rating</th>
+                                <th>Summary</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal for viewing full history record -->
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h2>Analysis Record</h2>
+                <button class="close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
